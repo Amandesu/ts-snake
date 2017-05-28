@@ -47,40 +47,73 @@ createModel(15, 15);
 class Snake{
 	snakes:Array<number[]>;
 	newSnake:Array<number>;
+	row :number;        //蛇头的坐标
+	col :number; 
+	direction:string;
+	interval:any;
 	constructor(){
+		
+		this.direction = "r";
+		this.initSnakes()
+		this.bindEvent();
+	}
+	initSnakes(){
 		var snakes = this.snakes = [];
 		for(let i = 0; i < 3; i++){
 			snakes.push([0, i]);
 		}
-		this.updateSnakes();
+		this.row = 0;
+		this.col = 2;
 		this.setNewSnake();
-		this.bindEvent();
-		//this.start("r");
+		this.updateSnakes();
 	}
-	start(d){
-		var row = 0;       //初始的蛇头坐标;
-		var col = 2;
+	start(d):void{
 		var snakes = this.snakes;
-		setInterval(()=>{
-			if (d == "r") {
-				col++;
-			} else if (d == "l") {
-				col--;
-			} else if (d == "t") {
-				row--;
+		clearInterval(this.interval);
+		this.interval = setInterval(()=>{
+			var head;
+			if (d){
+				this.direction = d
 			} else {
-				row++;
+				d = this.direction
 			}
-			snakes.shift();
-			snakes.push([row, col])
+			if (d == "r") {
+				this.col++;
+			} else if (d == "l") {
+				this.col--;
+			} else if (d == "t") {
+				this.row--;
+			} else if (d == "d"){
+				this.row++;
+			}
+			head = [this.row, this.col];
+			if (!T.isEqualArr(this.newSnake, head)) {
+				snakes.shift();
+			} else {
+				this.setNewSnake()
+			}	
+			snakes.push([this.row, this.col])
 			this.updateSnakes()
 		}, 300)
 	}
-	bindEvent(){
+	bindEvent():void{
 		enum keys {l=37, t, r, d};
-		document.addEventListener("keydown", (e)=>{
-			this.start(keys[e.keyCode])
-		})
+		document.addEventListener("keydown", (e)=>{	
+			var v = Math.abs(keys[this.direction] - e.keyCode);
+			if (v == 1 || v == 3){
+				//this.direction = keys[e.keyCode];
+				this.start(keys[e.keyCode])
+			} 		
+		});
+		T.find("#start").addEventListener("click", ()=>{
+			this.start();
+		});
+
+		T.find("#restart").addEventListener("click", ()=>{
+			this.direction = "r";
+			this.initSnakes();
+			clearInterval(this.interval);
+		}
 	}
 	updateSnakes():void{
 		let snakes = this.snakes;
@@ -100,6 +133,9 @@ class Snake{
 			snakes = this.snakes,
 			len = snakes.length,
 			random = T.random;
+		T.findAll(".cell").forEach(node => {
+			node.className = node.className.replace("newSnake", "")
+		})
 		while (!passed) {
 			let r = random(0, 14);
 			let c = random(0, 14);
